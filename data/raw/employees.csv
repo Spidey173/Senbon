@@ -1,0 +1,31 @@
+employee_id,store_id,first_name,last_name,role,hourly_rate,hire_date
+EMP_0001,STR_002,StaffFirst1,StaffLast1,Sales Associate,22.5,2023-11-30
+EMP_0002,STR_004,StaffFirst2,StaffLast2,Store Manager,45.0,2024-09-03
+EMP_0003,STR_002,StaffFirst3,StaffLast3,Cashier,22.5,2024-12-19
+EMP_0004,STR_010,StaffFirst4,StaffLast4,Inventory Specialist,22.5,2025-04-11
+EMP_0005,STR_001,StaffFirst5,StaffLast5,Sales Associate,22.5,2024-03-25
+EMP_0006,STR_004,StaffFirst6,StaffLast6,Cashier,22.5,2022-01-30
+EMP_0007,STR_001,StaffFirst7,StaffLast7,Cashier,22.5,2024-05-04
+EMP_0008,STR_009,StaffFirst8,StaffLast8,Inventory Specialist,22.5,2024-03-21
+EMP_0009,STR_008,StaffFirst9,StaffLast9,Cashier,22.5,2023-11-24
+EMP_0010,STR_001,StaffFirst10,StaffLast10,Store Manager,45.0,2023-02-01
+EMP_0011,STR_006,StaffFirst11,StaffLast11,Shift Supervisor,22.5,2024-08-01
+EMP_0012,STR_004,StaffFirst12,StaffLast12,Shift Supervisor,22.5,2024-11-18
+EMP_0013,STR_002,StaffFirst13,StaffLast13,Inventory Specialist,22.5,2024-11-29
+EMP_0014,STR_006,StaffFirst14,StaffLast14,Shift Supervisor,22.5,2022-01-26
+EMP_0015,STR_005,StaffFirst15,StaffLast15,Sales Associate,22.5,2022-11-18
+EMP_0016,STR_009,StaffFirst16,StaffLast16,Sales Associate,22.5,2023-05-02
+EMP_0017,STR_002,StaffFirst17,StaffLast17,Cashier,22.5,2023-10-24
+EMP_0018,STR_010,StaffFirst18,StaffLast18,Shift Supervisor,22.5,2022-03-21
+EMP_0019,STR_004,StaffFirst19,StaffLast19,Sales Associate,22.5,2025-03-14
+EMP_0020,STR_004,StaffFirst20,StaffLast20,Shift Supervisor,22.5,2025-01-03
+EMP_0021,STR_004,StaffFirst21,StaffLast21,Sales Associate,22.5,2023-04-29
+EMP_0022,STR_005,StaffFirst22,StaffLast22,Inventory Specialist,22.5,2023-05-30
+EMP_0023,STR_003,StaffFirst23,StaffLast23,Shift Supervisor,22.5,2023-06-19
+EMP_0024,STR_004,StaffFirst24,StaffLast24,Shift Supervisor,22.5,2025-01-20
+EMP_0025,STR_010,StaffFirst25,StaffLast25,Store Manager,45.0,2022-06-18
+EMP_0026,STR_004,StaffFirst26,StaffLast26,Store Manager,45.0,2022-11-12
+EMP_0027,STR_007,StaffFirst27,StaffLast27,Shift Supervisor,22.5,2022-05-02
+EMP_0028,STR_004,StaffFirst28,StaffLast28,Shift Supervisor,22.5,2025-02-21
+EMP_0029,STR_004,StaffFirst29,StaffLast29,Sales Associate,22.5,2023-09-08
+EMP_0030,STR_007,StaffFirst30,StaffLast30,Shift Supervisor,22.5,2025-01-31

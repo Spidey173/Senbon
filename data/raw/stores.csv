@@ -1,0 +1,11 @@
+store_id,store_name,store_type,city,state,country,square_feet,opened_date
+STR_001,Manhattan Flagship,FLAGSHIP,New York,NY,USA,45000,2018-04-15
+STR_002,Union Square Tech Hub,EXPRESS,San Francisco,CA,USA,18000,2019-08-20
+STR_003,Michigan Ave Retail,FLAGSHIP,Chicago,IL,USA,38000,2017-11-10
+STR_004,Domain Northside,OUTLET,Austin,TX,USA,22000,2021-02-14
+STR_005,Pike Place Center,EXPRESS,Seattle,WA,USA,16500,2020-05-30
+STR_006,Brickell City Center,FLAGSHIP,Miami,FL,USA,34000,2019-12-01
+STR_007,Cherry Creek Hub,OUTLET,Denver,CO,USA,20000,2022-03-18
+STR_008,Back Bay Boutique,EXPRESS,Boston,MA,USA,15000,2018-09-09
+STR_009,Buckhead Plaza,FLAGSHIP,Atlanta,GA,USA,31000,2020-10-25
+STR_010,Century City Center,ONLINE_FULFILLMENT,Los Angeles,CA,USA,60000,2021-07-04
