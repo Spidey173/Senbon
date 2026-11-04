@@ -53,10 +53,14 @@ class DuckDBLakehouseEngine:
         if HAS_DUCKDB:
             logger.info(f"Opening DuckDB database at [{self.db_path}]")
             self.con = duckdb.connect(self.db_path)
-            # Create schema namespaces
-            self.con.execute("CREATE SCHEMA IF NOT EXISTS bronze;")
-            self.con.execute("CREATE SCHEMA IF NOT EXISTS silver;")
-            self.con.execute("CREATE SCHEMA IF NOT EXISTS gold;")
+            # Create schema namespaces safely using a cursor
+            cur = self.con.cursor()
+            try:
+                cur.execute("CREATE SCHEMA IF NOT EXISTS bronze;").fetchall()
+                cur.execute("CREATE SCHEMA IF NOT EXISTS silver;").fetchall()
+                cur.execute("CREATE SCHEMA IF NOT EXISTS gold;").fetchall()
+            finally:
+                cur.close()
         else:
             logger.info(f"DuckDB library not in environment. Using embedded vectorized SQLite at [{self.db_path}.sqlite]")
             self.con = sqlite3.connect(f"{self.db_path}.sqlite")
@@ -87,26 +91,39 @@ class DuckDBLakehouseEngine:
     # -------------------------------------------------------------------------
     def _process_customers_silver(self) -> int:
         if HAS_DUCKDB and self.con:
-            source = self._get_bronze_source("customers")
-            query = f"""
-                SELECT 
-                    customer_id,
-                    TRIM(first_name) AS first_name,
-                    TRIM(last_name) AS last_name,
-                    CONCAT(TRIM(first_name), ' ', TRIM(last_name)) AS full_name,
-                    LOWER(TRIM(email)) AS email,
-                    phone, city, state, country, postal_code, customer_segment,
-                    created_at, updated_at,
-                    _lakehouse_ingested_at, _lakehouse_batch_id, _lakehouse_source_file,
-                    CURRENT_TIMESTAMP AS silver_processed_at
-                FROM (
-                    SELECT *,
-                           ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) AS _rn
-                    FROM {source}
-                ) sub
-                WHERE _rn = 1
-            """
-            return self._execute_silver_sql("customers", query)
+            try:
+                source = self._get_bronze_source("customers")
+                cur = self.con.cursor()
+                try:
+                    cols = [c[0].lower() for c in cur.execute(f"DESCRIBE SELECT * FROM {source} LIMIT 0;").fetchall()]
+                finally:
+                    cur.close()
+
+                select_cols = ["customer_id"]
+                select_cols.append("TRIM(first_name) AS first_name" if "first_name" in cols else "'' AS first_name")
+                select_cols.append("TRIM(last_name) AS last_name" if "last_name" in cols else "'' AS last_name")
+                if "first_name" in cols and "last_name" in cols:
+                    select_cols.append("CONCAT(TRIM(first_name), ' ', TRIM(last_name)) AS full_name")
+                for c in ["email", "phone", "city", "state", "country", "postal_code", "customer_segment", "created_at", "updated_at", "_lakehouse_ingested_at", "_lakehouse_batch_id", "_lakehouse_source_file"]:
+                    if c in cols:
+                        if c == "email":
+                            select_cols.append("LOWER(TRIM(email)) AS email")
+                        else:
+                            select_cols.append(c)
+                select_cols.append("CURRENT_TIMESTAMP AS silver_processed_at")
+
+                query = f"""
+                    SELECT {', '.join(select_cols)}
+                    FROM (
+                        SELECT *,
+                               ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) AS _rn
+                        FROM {source}
+                    ) sub
+                    WHERE _rn = 1
+                """
+                return self._execute_silver_sql("customers", query)
+            except Exception as e:
+                logger.warning(f"DuckDB SQL customer processing failed, falling back: {e}")
 
         df = self._read_bronze("customers")
         if df.empty:
@@ -132,33 +149,39 @@ class DuckDBLakehouseEngine:
     # -------------------------------------------------------------------------
     def _process_products_silver(self) -> int:
         if HAS_DUCKDB and self.con:
-            source = self._get_bronze_source("products")
-            query = f"""
-                SELECT 
-                    product_id,
-                    product_name,
-                    category,
-                    subcategory,
-                    CAST(unit_price AS DOUBLE) AS unit_price,
-                    CAST(cost_price AS DOUBLE) AS cost_price,
-                    sku,
-                    is_active,
-                    created_at,
-                    updated_at,
-                    _lakehouse_ingested_at,
-                    _lakehouse_batch_id,
-                    _lakehouse_source_file,
-                    ROUND(CAST(unit_price AS DOUBLE) - CAST(cost_price AS DOUBLE), 2) AS gross_margin_usd,
-                    ROUND(((CAST(unit_price AS DOUBLE) - CAST(cost_price AS DOUBLE)) / NULLIF(CAST(unit_price AS DOUBLE), 0)) * 100, 2) AS margin_percentage,
-                    CURRENT_TIMESTAMP AS silver_processed_at
-                FROM (
-                    SELECT *,
-                           ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY updated_at DESC) AS _rn
-                    FROM {source}
-                ) sub
-                WHERE _rn = 1
-            """
-            return self._execute_silver_sql("products", query)
+            try:
+                source = self._get_bronze_source("products")
+                cur = self.con.cursor()
+                try:
+                    cols = [c[0].lower() for c in cur.execute(f"DESCRIBE SELECT * FROM {source} LIMIT 0;").fetchall()]
+                finally:
+                    cur.close()
+
+                select_cols = ["product_id"]
+                for c in ["product_name", "category", "subcategory", "sku", "is_active", "created_at", "updated_at", "_lakehouse_ingested_at", "_lakehouse_batch_id", "_lakehouse_source_file"]:
+                    if c in cols:
+                        select_cols.append(c)
+                if "unit_price" in cols:
+                    select_cols.append("CAST(unit_price AS DOUBLE) AS unit_price")
+                if "cost_price" in cols:
+                    select_cols.append("CAST(cost_price AS DOUBLE) AS cost_price")
+                if "unit_price" in cols and "cost_price" in cols:
+                    select_cols.append("ROUND(CAST(unit_price AS DOUBLE) - CAST(cost_price AS DOUBLE), 2) AS gross_margin_usd")
+                    select_cols.append("ROUND(((CAST(unit_price AS DOUBLE) - CAST(cost_price AS DOUBLE)) / NULLIF(CAST(unit_price AS DOUBLE), 0)) * 100, 2) AS margin_percentage")
+                select_cols.append("CURRENT_TIMESTAMP AS silver_processed_at")
+
+                query = f"""
+                    SELECT {', '.join(select_cols)}
+                    FROM (
+                        SELECT *,
+                               ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY updated_at DESC) AS _rn
+                        FROM {source}
+                    ) sub
+                    WHERE _rn = 1
+                """
+                return self._execute_silver_sql("products", query)
+            except Exception as e:
+                logger.warning(f"DuckDB SQL products processing failed, falling back: {e}")
 
         df = self._read_bronze("products")
         if df.empty:
@@ -223,36 +246,47 @@ class DuckDBLakehouseEngine:
     # -------------------------------------------------------------------------
     def _process_orders_silver(self) -> int:
         if HAS_DUCKDB and self.con:
-            source = self._get_bronze_source("orders")
-            query = f"""
-                SELECT 
-                    order_id,
-                    customer_id,
-                    store_id,
-                    employee_id,
-                    order_status,
-                    order_date,
-                    CAST(total_amount AS DOUBLE) AS total_amount,
-                    CAST(discount_amount AS DOUBLE) AS discount_amount,
-                    updated_at,
-                    _lakehouse_ingested_at,
-                    _lakehouse_batch_id,
-                    _lakehouse_source_file,
-                    CAST(order_date AS TIMESTAMP) AS order_timestamp,
-                    STRFTIME(CAST(order_date AS TIMESTAMP), '%Y-%m-%d') AS order_date_only,
-                    YEAR(CAST(order_date AS TIMESTAMP)) AS order_year,
-                    MONTH(CAST(order_date AS TIMESTAMP)) AS order_month,
-                    DAY(CAST(order_date AS TIMESTAMP)) AS order_day,
-                    CASE WHEN DATEDIFF('day', CAST(order_date AS TIMESTAMP), CAST(updated_at AS TIMESTAMP)) > 30 THEN TRUE ELSE FALSE END AS is_late_arriving,
-                    CURRENT_TIMESTAMP AS silver_processed_at
-                FROM (
-                    SELECT *,
-                           ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY updated_at DESC) AS _rn
-                    FROM {source}
-                ) sub
-                WHERE _rn = 1
-            """
-            return self._execute_silver_sql("orders", query)
+            try:
+                source = self._get_bronze_source("orders")
+                cur = self.con.cursor()
+                try:
+                    cols = [c[0].lower() for c in cur.execute(f"DESCRIBE SELECT * FROM {source} LIMIT 0;").fetchall()]
+                finally:
+                    cur.close()
+
+                select_cols = ["order_id"]
+                for c in ["customer_id", "store_id", "employee_id", "order_status", "order_date"]:
+                    if c in cols:
+                        select_cols.append(c)
+                if "total_amount" in cols:
+                    select_cols.append("CAST(total_amount AS DOUBLE) AS total_amount")
+                if "discount_amount" in cols:
+                    select_cols.append("CAST(discount_amount AS DOUBLE) AS discount_amount")
+                if "updated_at" in cols:
+                    select_cols.append("updated_at")
+                for c in ["_lakehouse_ingested_at", "_lakehouse_batch_id", "_lakehouse_source_file"]:
+                    if c in cols:
+                        select_cols.append(c)
+                select_cols.append("CAST(order_date AS TIMESTAMP) AS order_timestamp")
+                select_cols.append("STRFTIME(CAST(order_date AS TIMESTAMP), '%Y-%m-%d') AS order_date_only")
+                select_cols.append("YEAR(CAST(order_date AS TIMESTAMP)) AS order_year")
+                select_cols.append("MONTH(CAST(order_date AS TIMESTAMP)) AS order_month")
+                select_cols.append("DAY(CAST(order_date AS TIMESTAMP)) AS order_day")
+                select_cols.append("CASE WHEN DATEDIFF('day', CAST(order_date AS TIMESTAMP), CAST(updated_at AS TIMESTAMP)) > 30 THEN TRUE ELSE FALSE END AS is_late_arriving")
+                select_cols.append("CURRENT_TIMESTAMP AS silver_processed_at")
+
+                query = f"""
+                    SELECT {', '.join(select_cols)}
+                    FROM (
+                        SELECT *,
+                               ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY updated_at DESC) AS _rn
+                        FROM {source}
+                    ) sub
+                    WHERE _rn = 1
+                """
+                return self._execute_silver_sql("orders", query)
+            except Exception as e:
+                logger.warning(f"DuckDB SQL orders processing failed, falling back: {e}")
 
         df = self._read_bronze("orders")
         if df.empty:
@@ -376,16 +410,20 @@ class DuckDBLakehouseEngine:
 
     def _execute_silver_sql(self, table_name: str, query: str) -> int:
         """Executes native DuckDB SQL query, creating table and exporting Snappy Parquet."""
-        self.con.execute(f"CREATE OR REPLACE TABLE silver.{table_name} AS {query};")
-        parquet_target = self.silver_dir / f"{table_name}.parquet"
-        csv_target = self.silver_dir / f"{table_name}.csv"
+        cur = self.con.cursor()
         try:
-            self.con.execute(f"COPY silver.{table_name} TO '{parquet_target}' (FORMAT PARQUET, COMPRESSION SNAPPY);")
-        except Exception as e:
-            logger.debug(f"Parquet export skipped: {e}")
-        self.con.execute(f"COPY silver.{table_name} TO '{csv_target}' (HEADER, DELIMITER ',');")
-        count = self.con.execute(f"SELECT COUNT(*) FROM silver.{table_name}").fetchone()[0]
-        return count
+            cur.execute(f"CREATE OR REPLACE TABLE silver.{table_name} AS {query};").fetchall()
+            parquet_target = self.silver_dir / f"{table_name}.parquet"
+            csv_target = self.silver_dir / f"{table_name}.csv"
+            try:
+                cur.execute(f"COPY silver.{table_name} TO '{parquet_target}' (FORMAT PARQUET, COMPRESSION SNAPPY);").fetchall()
+            except Exception as e:
+                logger.debug(f"Parquet export skipped: {e}")
+            cur.execute(f"COPY silver.{table_name} TO '{csv_target}' (HEADER, DELIMITER ',');").fetchall()
+            count = cur.execute(f"SELECT COUNT(*) FROM silver.{table_name};").fetchone()[0]
+            return count
+        finally:
+            cur.close()
 
     def _read_bronze(self, name: str) -> pd.DataFrame:
         parquet_path = self.bronze_dir / name / f"{name}.parquet"
@@ -405,14 +443,18 @@ class DuckDBLakehouseEngine:
 
         # Vectorized DuckDB materialization
         if HAS_DUCKDB and self.con:
-            self.con.register("temp_df", df)
-            self.con.execute(f"CREATE OR REPLACE TABLE silver.{table_name} AS SELECT * FROM temp_df;")
+            cur = self.con.cursor()
             try:
-                parquet_target = self.silver_dir / f"{table_name}.parquet"
-                self.con.execute(f"COPY silver.{table_name} TO '{parquet_target}' (FORMAT PARQUET, COMPRESSION SNAPPY);")
-            except Exception as e:
-                logger.debug(f"DuckDB snappy parquet copy skipped: {e}")
-            self.con.unregister("temp_df")
+                cur.register("temp_df", df)
+                cur.execute(f"CREATE OR REPLACE TABLE silver.{table_name} AS SELECT * FROM temp_df;").fetchall()
+                try:
+                    parquet_target = self.silver_dir / f"{table_name}.parquet"
+                    cur.execute(f"COPY silver.{table_name} TO '{parquet_target}' (FORMAT PARQUET, COMPRESSION SNAPPY);").fetchall()
+                except Exception as e:
+                    logger.debug(f"DuckDB snappy parquet copy skipped: {e}")
+                cur.unregister("temp_df")
+            finally:
+                cur.close()
 
 
 if __name__ == "__main__":
