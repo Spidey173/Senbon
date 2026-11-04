@@ -1,0 +1,239 @@
+version: '3.8'
+
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: docker/airflow/Dockerfile
+  environment:
+    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER:-retail_admin}:${POSTGRES_PASSWORD:-retail_secure_pass_2026}@postgres:5432/airflow
+    - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_FERNET_KEY:-46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqnzq8=}
+    - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+    - AIRFLOW__CORE__DEFAULT_TIMEZONE=utc
+    - POSTGRES_HOST=postgres
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=${POSTGRES_USER:-retail_admin}
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-retail_secure_pass_2026}
+    - POSTGRES_DB=${POSTGRES_DB:-retail_dw}
+    - MINIO_ENDPOINT=minio:9000
+    - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+    - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin123}
+    - MINIO_SECURE=false
+    - MOCK_API_URL=http://retail-mock-api:8000
+    - PYTHONPATH=/opt/airflow:/opt/airflow/scripts:/opt/airflow/config
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/plugins:/opt/airflow/plugins
+    - ./scripts:/opt/airflow/scripts
+    - ./config:/opt/airflow/config
+    - ./dbt:/opt/airflow/dbt
+    - ./data:/opt/airflow/data
+    - ./logs:/opt/airflow/logs
+    - ./expectations:/opt/airflow/expectations
+    - ./warehouse:/opt/airflow/warehouse
+  networks:
+    - lakehouse-network
+
+services:
+  # ============================================================================
+  # 1. PostgreSQL (DW & Metadata Backend)
+  # ============================================================================
+  postgres:
+    image: postgres:16.3-alpine
+    container_name: lakehouse-postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-retail_admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-retail_secure_pass_2026}
+      - POSTGRES_MULTIPLE_DATABASES=airflow,${POSTGRES_DB:-retail_dw}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-retail_admin} -d ${POSTGRES_DB:-retail_dw}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+    networks:
+      - lakehouse-network
+
+  # ============================================================================
+  # 2. MinIO S3 Object Storage Data Lake
+  # ============================================================================
+  minio:
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z
+    container_name: lakehouse-minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+    networks:
+      - lakehouse-network
+
+  # ============================================================================
+  # 3. MinIO Automated Bucket Provisioner
+  # ============================================================================
+  minio-create-buckets:
+    image: minio/mc:RELEASE.2024-06-13T22-44-32Z
+    container_name: lakehouse-minio-provisioner
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO...';
+      /usr/bin/mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER:-minioadmin} $${MINIO_ROOT_PASSWORD:-minioadmin123};
+      /usr/bin/mc mb --ignore-existing myminio/retail-raw;
+      /usr/bin/mc mb --ignore-existing myminio/retail-bronze;
+      /usr/bin/mc mb --ignore-existing myminio/retail-silver;
+      /usr/bin/mc mb --ignore-existing myminio/retail-gold;
+      /usr/bin/mc mb --ignore-existing myminio/retail-quarantine;
+      echo 'Lakehouse buckets successfully provisioned in MinIO.';
+      exit 0;
+      "
+    networks:
+      - lakehouse-network
+
+  # ============================================================================
+  # 4. External Retail Mock REST APIs (FastAPI)
+  # ============================================================================
+  retail-mock-api:
+    build:
+      context: .
+      dockerfile: docker/mock_api/Dockerfile
+    container_name: lakehouse-mock-api
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - lakehouse-network
+
+  # ============================================================================
+  # 5. Airflow DB Init & User Setup
+  # ============================================================================
+  airflow-init:
+    <<: *airflow-common
+    container_name: lakehouse-airflow-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      bash -c "
+      airflow db migrate &&
+      airflow users create --role Admin --username $${AIRFLOW_USER:-admin} --password $${AIRFLOW_PASSWORD:-admin} --firstname Data --lastname Engineer --email $${AIRFLOW_EMAIL:-data-eng@retail-corp.internal} || true
+      "
+    restart: on-failure
+
+  # ============================================================================
+  # 6. Airflow Webserver
+  # ============================================================================
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: lakehouse-airflow-webserver
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "[ $$(curl -f http://localhost:8080/health 2>/dev/null | grep -c '\"healthy\"') -ge 1 ]"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1536M
+    restart: always
+
+  # ============================================================================
+  # 7. Airflow Scheduler
+  # ============================================================================
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: lakehouse-airflow-scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    command: scheduler
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+    restart: always
+
+  # ============================================================================
+  # 8. Business Intelligence Dashboard (Metabase)
+  # ============================================================================
+  metabase:
+    image: metabase/metabase:v0.49.13
+    container_name: lakehouse-metabase
+    ports:
+      - "3000:3000"
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=${POSTGRES_DB:-retail_dw}
+      - MB_DB_PORT=5432
+      - MB_DB_USER=${POSTGRES_USER:-retail_admin}
+      - MB_DB_PASS=${POSTGRES_PASSWORD:-retail_secure_pass_2026}
+      - MB_DB_HOST=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1536M
+    volumes:
+      - metabase_data:/metabase-data
+    restart: always
+    networks:
+      - lakehouse-network
+
+volumes:
+  pg_data:
+  minio_data:
+  metabase_data:
+
+networks:
+  lakehouse-network:
+    driver: bridge

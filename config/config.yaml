@@ -1,0 +1,115 @@
+# ==============================================================================
+# Pipeline Configuration Specification
+# ==============================================================================
+
+pipeline:
+  name: "senbon-retail-intelligence-pipeline"
+  version: "1.0.0"
+  batch_window_hours: 24
+  late_arriving_threshold_days: 7
+
+paths:
+  base_dir: "."
+  raw_dir: "data/raw"
+  validated_dir: "data/validated"
+  rejected_dir: "data/rejected"
+  bronze_dir: "data/bronze"
+  silver_dir: "data/silver"
+  gold_dir: "data/gold"
+  duckdb_file: "data/retail_lakehouse.duckdb"
+  logs_dir: "logs"
+
+minio:
+  buckets:
+    raw: "retail-raw"
+    bronze: "retail-bronze"
+    silver: "retail-silver"
+    gold: "retail-gold"
+    quarantine: "retail-quarantine"
+  storage_class: "STANDARD"
+  part_size_mb: 10
+
+ingestion:
+  csv_sources:
+    - name: "customers"
+      primary_key: "customer_id"
+      file_pattern: "customers.csv"
+      has_cdc: true
+      cdc_key: "updated_at"
+    - name: "products"
+      primary_key: "product_id"
+      file_pattern: "products.csv"
+      has_cdc: true
+      cdc_key: "updated_at"
+    - name: "stores"
+      primary_key: "store_id"
+      file_pattern: "stores.csv"
+      has_cdc: false
+    - name: "employees"
+      primary_key: "employee_id"
+      file_pattern: "employees.csv"
+      has_cdc: false
+    - name: "orders"
+      primary_key: "order_id"
+      file_pattern: "orders.csv"
+      has_cdc: true
+      cdc_key: "updated_at"
+    - name: "order_items"
+      primary_key: "order_item_id"
+      file_pattern: "order_items.csv"
+      has_cdc: false
+    - name: "payments"
+      primary_key: "payment_id"
+      file_pattern: "payments.csv"
+      has_cdc: false
+    - name: "inventory"
+      primary_key: "inventory_id"
+      file_pattern: "inventory.csv"
+      has_cdc: true
+      cdc_key: "last_restocked_at"
+    - name: "suppliers"
+      primary_key: "supplier_id"
+      file_pattern: "suppliers.csv"
+      has_cdc: false
+    - name: "reviews"
+      primary_key: "review_id"
+      file_pattern: "reviews.csv"
+      has_cdc: false
+
+  api_sources:
+    - name: "daily_sales"
+      endpoint: "/api/v1/sales/daily"
+      target_table: "api_sales"
+      incremental: true
+    - name: "currency_rates"
+      endpoint: "/api/v1/currency/rates"
+      target_table: "currency_rates"
+      incremental: false
+    - name: "store_weather"
+      endpoint: "/api/v1/weather/stores"
+      target_table: "store_weather"
+      incremental: false
+    - name: "marketing_campaigns"
+      endpoint: "/api/v1/marketing/campaigns"
+      target_table: "marketing_campaigns"
+      incremental: false
+
+quality:
+  strict_mode: false # If false, bad records go to DLQ and clean records proceed
+  max_acceptable_failure_percentage: 10.0
+  profiling_enabled: true
+  dlq_retention_days: 30
+
+retries:
+  max_attempts: 3
+  initial_delay_sec: 2
+  backoff_multiplier: 2
+  max_delay_sec: 30
+
+warehouse:
+  schemas:
+    staging: "staging"
+    intermediate: "intermediate"
+    marts: "analytics"
+    monitoring: "monitoring"
+
