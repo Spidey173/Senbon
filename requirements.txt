@@ -37,6 +37,7 @@ tenacity>=8.5.0
 pytest>=8.2.0
 pytest-mock>=3.14.0
 pytest-cov>=5.0.0
+flake8>=7.0.0
 
 # Utilities & Configuration
 pyyaml>=6.0.1
