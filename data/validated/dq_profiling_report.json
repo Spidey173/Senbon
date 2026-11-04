@@ -1,0 +1,178 @@
+{
+  "batch_id": "BATCH_20261104_195727",
+  "timestamp": "2026-11-04T19:57:27.950498+00:00",
+  "total_processed": 2791,
+  "total_quarantined": 4,
+  "overall_pass_rate_pct": 99.86,
+  "dataset_breakdown": {
+    "stores": {
+      "total_rows": 10,
+      "clean_rows": 10,
+      "quarantined_rows": 0,
+      "pass_rate_pct": 100.0
+    },
+    "employees": {
+      "total_rows": 30,
+      "clean_rows": 30,
+      "quarantined_rows": 0,
+      "pass_rate_pct": 100.0
+    },
+    "suppliers": {
+      "total_rows": 15,
+      "clean_rows": 15,
+      "quarantined_rows": 0,
+      "pass_rate_pct": 100.0
+    },
+    "products": {
+      "total_rows": 49,
+      "clean_rows": 48,
+      "quarantined_rows": 1,
+      "pass_rate_pct": 97.96
+    },
+    "customers": {
+      "total_rows": 101,
+      "clean_rows": 100,
+      "quarantined_rows": 1,
+      "pass_rate_pct": 99.01
+    },
+    "inventory": {
+      "total_rows": 200,
+      "clean_rows": 200,
+      "quarantined_rows": 0,
+      "pass_rate_pct": 100.0
+    },
+    "orders": {
+      "total_rows": 502,
+      "clean_rows": 501,
+      "quarantined_rows": 1,
+      "pass_rate_pct": 99.8
+    },
+    "order_items": {
+      "total_rows": 1233,
+      "clean_rows": 1233,
+      "quarantined_rows": 0,
+      "pass_rate_pct": 100.0
+    },
+    "payments": {
+      "total_rows": 500,
+      "clean_rows": 500,
+      "quarantined_rows": 0,
+      "pass_rate_pct": 100.0
+    },
+    "reviews": {
+      "total_rows": 151,
+      "clean_rows": 150,
+      "quarantined_rows": 1,
+      "pass_rate_pct": 99.34
+    }
+  },
+  "great_expectations_validation": {
+    "customers": {
+      "suite_name": "retail_customers_suite",
+      "total_expectations": 5,
+      "passed": 5,
+      "failed": 0,
+      "success": true,
+      "details": [
+        {
+          "expectation": "expect_table_columns_to_match_ordered_list",
+          "column": null,
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_not_be_null",
+          "column": "customer_id",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_be_unique",
+          "column": "customer_id",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_match_regex",
+          "column": "email",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_be_in_set",
+          "column": "customer_segment",
+          "success": true
+        }
+      ]
+    },
+    "orders": {
+      "suite_name": "retail_orders_suite",
+      "total_expectations": 6,
+      "passed": 6,
+      "failed": 0,
+      "success": true,
+      "details": [
+        {
+          "expectation": "expect_table_columns_to_match_ordered_list",
+          "column": null,
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_not_be_null",
+          "column": "order_id",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_be_unique",
+          "column": "order_id",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_not_be_null",
+          "column": "customer_id",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_be_between",
+          "column": "total_amount",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_be_in_set",
+          "column": "order_status",
+          "success": true
+        }
+      ]
+    },
+    "products": {
+      "suite_name": "retail_products_suite",
+      "total_expectations": 5,
+      "passed": 5,
+      "failed": 0,
+      "success": true,
+      "details": [
+        {
+          "expectation": "expect_table_columns_to_match_ordered_list",
+          "column": null,
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_not_be_null",
+          "column": "product_id",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_be_unique",
+          "column": "product_id",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_be_between",
+          "column": "unit_price",
+          "success": true
+        },
+        {
+          "expectation": "expect_column_values_to_be_between",
+          "column": "cost_price",
+          "success": true
+        }
+      ]
+    }
+  }
+}

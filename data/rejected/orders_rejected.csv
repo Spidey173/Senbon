@@ -1,0 +1,2 @@
+order_id,customer_id,store_id,employee_id,order_status,order_date,total_amount,discount_amount,updated_at,_quarantine_reason,_quarantined_at,_lakehouse_batch_id
+ORD_CORRUPT_NEG_001,CUST_00001,STR_001,EMP_0001,COMPLETED,2026-01-01T00:00:00+00:00,-149.99,0.0,2026-01-01T00:00:00+00:00,ERR_BUSINESS_RULE_VIOLATION: total_amount must be >= 0,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727

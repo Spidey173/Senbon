@@ -1,0 +1,2 @@
+product_id,product_name,category,subcategory,unit_price,cost_price,sku,is_active,created_at,updated_at,_quarantine_reason,_quarantined_at,_lakehouse_batch_id
+PRD_0001,Smartphones Model 1,Electronics,Smartphones,9999.99,143.9,SKU-ELE-PRD_0001,True,2025-01-27T00:00:00+00:00,2025-01-27T00:00:00+00:00,ERR_DUPLICATE_RECORD: duplicate product_id in batch,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727

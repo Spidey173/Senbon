@@ -1,0 +1,2 @@
+customer_id,first_name,last_name,email,phone,city,state,country,postal_code,customer_segment,created_at,updated_at,_quarantine_reason,_quarantined_at,_lakehouse_batch_id
+,Ghost,Record,invalid_email_no_domain,000-000,Unknown,XX,USA,00000,REGULAR,2026-01-01T00:00:00+00:00,2026-01-01T00:00:00+00:00,ERR_NULL_PRIMARY_KEY: customer_id is null/empty; ERR_BUSINESS_RULE_VIOLATION: invalid email format,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727

@@ -1,0 +1,16 @@
+supplier_id,supplier_name,contact_email,country,payment_terms,_lakehouse_ingested_at,_lakehouse_batch_id,_lakehouse_source_file
+SUP_001,Global Vendor 1 Corp,procurement@vendor1.com,Germany,NET_90,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_002,Global Vendor 2 Corp,procurement@vendor2.com,Germany,IMMEDIATE,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_003,Global Vendor 3 Corp,procurement@vendor3.com,South Korea,IMMEDIATE,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_004,Global Vendor 4 Corp,procurement@vendor4.com,Germany,NET_90,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_005,Global Vendor 5 Corp,procurement@vendor5.com,Germany,NET_60,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_006,Global Vendor 6 Corp,procurement@vendor6.com,Canada,NET_90,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_007,Global Vendor 7 Corp,procurement@vendor7.com,Canada,IMMEDIATE,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_008,Global Vendor 8 Corp,procurement@vendor8.com,Vietnam,IMMEDIATE,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_009,Global Vendor 9 Corp,procurement@vendor9.com,Japan,NET_60,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_010,Global Vendor 10 Corp,procurement@vendor10.com,Germany,IMMEDIATE,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_011,Global Vendor 11 Corp,procurement@vendor11.com,USA,NET_30,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_012,Global Vendor 12 Corp,procurement@vendor12.com,Italy,NET_30,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_013,Global Vendor 13 Corp,procurement@vendor13.com,Germany,NET_60,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_014,Global Vendor 14 Corp,procurement@vendor14.com,Italy,IMMEDIATE,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv
+SUP_015,Global Vendor 15 Corp,procurement@vendor15.com,Vietnam,NET_30,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727,suppliers.csv

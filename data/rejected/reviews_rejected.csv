@@ -1,0 +1,2 @@
+review_id,product_id,customer_id,rating,review_text,review_date,_quarantine_reason,_quarantined_at,_lakehouse_batch_id
+REV_CORRUPT_INVALID_RATING,PRD_0001,CUST_00001,9,Impossible rating value,2026-01-01T00:00:00+00:00,ERR_OUT_OF_BOUNDS_VALUE: rating must be 1-5,2026-11-04T19:57:27.950498+00:00,BATCH_20261104_195727

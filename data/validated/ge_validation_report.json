@@ -1,0 +1,109 @@
+{
+  "customers": {
+    "suite_name": "retail_customers_suite",
+    "total_expectations": 5,
+    "passed": 5,
+    "failed": 0,
+    "success": true,
+    "details": [
+      {
+        "expectation": "expect_table_columns_to_match_ordered_list",
+        "column": null,
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_not_be_null",
+        "column": "customer_id",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_be_unique",
+        "column": "customer_id",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_match_regex",
+        "column": "email",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_be_in_set",
+        "column": "customer_segment",
+        "success": true
+      }
+    ]
+  },
+  "orders": {
+    "suite_name": "retail_orders_suite",
+    "total_expectations": 6,
+    "passed": 6,
+    "failed": 0,
+    "success": true,
+    "details": [
+      {
+        "expectation": "expect_table_columns_to_match_ordered_list",
+        "column": null,
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_not_be_null",
+        "column": "order_id",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_be_unique",
+        "column": "order_id",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_not_be_null",
+        "column": "customer_id",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_be_between",
+        "column": "total_amount",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_be_in_set",
+        "column": "order_status",
+        "success": true
+      }
+    ]
+  },
+  "products": {
+    "suite_name": "retail_products_suite",
+    "total_expectations": 5,
+    "passed": 5,
+    "failed": 0,
+    "success": true,
+    "details": [
+      {
+        "expectation": "expect_table_columns_to_match_ordered_list",
+        "column": null,
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_not_be_null",
+        "column": "product_id",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_be_unique",
+        "column": "product_id",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_be_between",
+        "column": "unit_price",
+        "success": true
+      },
+      {
+        "expectation": "expect_column_values_to_be_between",
+        "column": "cost_price",
+        "success": true
+      }
+    ]
+  }
+}
