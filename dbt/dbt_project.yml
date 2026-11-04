@@ -1,0 +1,36 @@
+name: 'retail_data_lakehouse'
+version: '1.0.0'
+config-version: 2
+
+profile: 'retail_data_lakehouse'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  retail_data_lakehouse:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: analytics
+      +materialized: table
+      core:
+        +materialized: table
+
+snapshots:
+  retail_data_lakehouse:
+    +target_schema: analytics
+    +strategy: timestamp
+

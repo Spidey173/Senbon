@@ -1,0 +1,57 @@
+version: 2
+
+sources:
+  - name: retail_source
+    schema: staging
+    description: "Curated Silver layer tables loaded into Postgres warehouse staging schema."
+    tables:
+      - name: stg_customers_raw
+        description: "Customer Master Data from Lakehouse Silver"
+        columns:
+          - name: customer_id
+            description: "Natural key"
+            tests:
+              - not_null
+      - name: stg_products_raw
+        description: "Product Catalog from Lakehouse Silver"
+        columns:
+          - name: product_id
+            description: "Natural key"
+            tests:
+              - not_null
+      - name: stg_stores_raw
+        description: "Store Locations Master"
+        columns:
+          - name: store_id
+            description: "Natural key"
+            tests:
+              - not_null
+      - name: stg_employees_raw
+        description: "Store Employee Roster"
+      - name: stg_suppliers_raw
+        description: "Vendor and Supplier Registry"
+      - name: stg_orders_raw
+        description: "Order Headers"
+        columns:
+          - name: order_id
+            description: "Natural key"
+            tests:
+              - not_null
+      - name: stg_order_items_raw
+        description: "Order Line Items"
+        columns:
+          - name: order_item_id
+            description: "Natural key"
+            tests:
+              - not_null
+      - name: stg_payments_raw
+        description: "Payment Transactions"
+      - name: stg_inventory_raw
+        description: "Store Level Stock Positions"
+      - name: stg_reviews_raw
+        description: "Customer Product Reviews"
+      - name: stg_api_sales_raw
+        description: "Streaming External API Daily Sales"
+      - name: stg_currency_rates_raw
+        description: "Forex Currency Exchange Rates"
+
