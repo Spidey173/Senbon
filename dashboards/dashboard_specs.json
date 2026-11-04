@@ -1,0 +1,72 @@
+{
+  "dashboard_name": "Senbon — Retail Intelligence & Operations Center",
+  "version": "1.0.0",
+  "refresh_interval_seconds": 3600,
+  "database_target": "retail_dw",
+  "cards": [
+    {
+      "id": "kpi_gross_revenue",
+      "title": "Total Net Revenue (USD)",
+      "type": "scalar",
+      "sql": "SELECT ROUND(SUM(line_total), 2) FROM analytics.fct_sales;",
+      "format": "currency",
+      "grid_position": {"row": 1, "col": 1, "size_x": 3, "size_y": 2}
+    },
+    {
+      "id": "kpi_gross_profit",
+      "title": "Gross Profit Margin (%)",
+      "type": "scalar",
+      "sql": "SELECT ROUND((SUM(line_profit) / NULLIF(SUM(line_total), 0)) * 100, 2) FROM analytics.fct_sales;",
+      "format": "percentage",
+      "grid_position": {"row": 1, "col": 4, "size_x": 3, "size_y": 2}
+    },
+    {
+      "id": "kpi_total_orders",
+      "title": "Total Completed Orders",
+      "type": "scalar",
+      "sql": "SELECT COUNT(DISTINCT order_key) FROM analytics.fct_orders WHERE order_status = 'COMPLETED';",
+      "format": "integer",
+      "grid_position": {"row": 1, "col": 7, "size_x": 3, "size_y": 2}
+    },
+    {
+      "id": "kpi_stockout_alerts",
+      "title": "Active Stockout Risk SKUs",
+      "type": "scalar",
+      "sql": "SELECT COUNT(*) FROM analytics.fct_inventory WHERE stockout_risk = TRUE;",
+      "format": "integer",
+      "alert_threshold": 10,
+      "grid_position": {"row": 1, "col": 10, "size_x": 3, "size_y": 2}
+    },
+    {
+      "id": "chart_monthly_trend",
+      "title": "Monthly Revenue & Profit Velocity",
+      "type": "line_bar_combo",
+      "x_axis": "month_name",
+      "series": ["monthly_revenue_usd", "monthly_profit_usd"],
+      "grid_position": {"row": 3, "col": 1, "size_x": 8, "size_y": 4}
+    },
+    {
+      "id": "chart_category_breakdown",
+      "title": "Sales Distribution by Category",
+      "type": "donut",
+      "dimension": "category",
+      "metric": "total_sales_usd",
+      "grid_position": {"row": 3, "col": 9, "size_x": 4, "size_y": 4}
+    },
+    {
+      "id": "table_top_stores",
+      "title": "Store Revenue & Efficiency Ranking",
+      "type": "table",
+      "columns": ["store_name", "store_type", "order_count", "store_revenue_usd", "revenue_per_sq_ft"],
+      "grid_position": {"row": 7, "col": 1, "size_x": 6, "size_y": 4}
+    },
+    {
+      "id": "table_pipeline_observability",
+      "title": "Lakehouse Pipeline Ingestion Latency & DLQ Volume",
+      "type": "table",
+      "columns": ["batch_id", "step_name", "status", "rows_out", "execution_time_sec", "logged_at"],
+      "grid_position": {"row": 7, "col": 7, "size_x": 6, "size_y": 4}
+    }
+  ]
+}
+
